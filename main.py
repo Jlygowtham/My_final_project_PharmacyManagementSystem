@@ -51,8 +51,99 @@ def AddMedicine():
        mysqldb.rollback()
        mysqldb.close()
 
+def AddTablet():
+    cust=CustEntry.get() 
+    name=nameEntry.get() 
+    age=ageEntry.get() 
+    date=DateEntry.get() 
+    city=cityEntry.get() 
+    gender=gender_combo.get() 
 
-# Function 
+    code=CodeEntry.get() 
+    tablet=TabletEntry.get() 
+    quan=QuanEntry.get()
+    price=PriceEntry.get()
+   
+    try:
+       mysqldb=mysql.connector.connect(host="localhost",user="root",password="",database="pharamacy")
+       mycursor=mysqldb.cursor()
+    
+        # Create the Medicine table if it doesn't exist and insert data
+       mycursor.execute("""
+            CREATE TABLE IF NOT EXISTS Customer (
+                Cust_id INT PRIMARY KEY,
+                Name VARCHAR(255),
+                Age INT,
+                date DATE,
+                City VARCHAR(255),
+                Gender VARCHAR(20)
+            )
+        """)
+       
+       mycursor.execute("""
+            CREATE TABLE IF NOT EXISTS Tablet_Data(
+                Tablet_code INT PRIMARY KEY,
+                Tablet_Name VARCHAR(255),
+                Quantity INT,
+                Price INT,
+                Cust_id INT,
+                FOREIGN KEY (Cust_id) REFERENCES Customer(Cust_id)
+            )
+        """)
+
+       mycursor.execute("SELECT * FROM Customer WHERE Cust_id=%s",(cust,))
+       exist_cust=mycursor.fetchone()
+
+       if cust!='' and name!='' and age!='' and date!='' and city!='' and gender!='' and code!='' and tablet!='' and quan!='' and price!='':
+            if not exist_cust:
+                custSql="INSERT INTO Customer (Cust_id,Name,Age,Date,City,Gender) VALUES (%s,%s,%s,%s,%s,%s)"
+                customer_data=(cust,name,age,date,city,gender)
+                mycursor.execute(custSql,customer_data)
+            
+            tableSql="INSERT INTO Tablet_Data (Tablet_code, Tablet_Name, Quantity, Price, Cust_id) VALUES (%s, %s, %s, %s, %s)"
+            tablet_data = (code, tablet, quan, price, cust)
+            mycursor.execute(tableSql, tablet_data)
+            
+            mysqldb.commit()
+            mysqldb.close()
+        
+       else:
+           messagebox.showinfo("Warning", "Enter the Details")
+
+    except mysql.connector.Error as err:
+        print("Error:", err)
+
+
+def ClearTablet():
+    CodeEntry.delete(0, END)
+    TabletEntry.delete(0, END)
+    QuanEntry.delete(0, END)
+    PriceEntry.delete(0, END)
+
+def UpdateTablet():
+    code=CodeEntry.get() 
+    tablet=TabletEntry.get() 
+    quan=QuanEntry.get()
+    price=PriceEntry.get()
+
+    try:
+        mysqldb=mysql.connector.connect(host="localhost", user="root", password="", database="pharamacy")
+        mycursor=mysqldb.cursor()
+
+        updateSql="""
+           UPDATE Tablet_Data
+           SET Tablet_Name=%s,Quantity = %s,Price=%s
+           WHERE Tablet_Code =%s
+        """
+        updateData=(tablet,quan,price,code)
+        mycursor.execute(updateSql,updateData)
+
+        mysqldb.commit()
+        mysqldb.close()
+        
+    except mysql.connector.Error as err:
+        print("Error:",err)
+
 def new_medicine():
     global codeEntry,nameEntry,priceEntry,disease_combo
     medicine=Toplevel()
@@ -113,6 +204,7 @@ def main_page():
     success.geometry("%dx%d+0+0" % (app_width, app_height))
     success.config(bg='#2d283e')
 
+    global CustEntry,nameEntry,ageEntry,DateEntry,cityEntry,gender_combo,CodeEntry,TabletEntry,QuanEntry,PriceEntry
     # --Head section--
     Label(success, text="Pharmacy Management System", font=('Helvetica', 45, 'bold'), fg='#d1d7e0', bg="#2d283e").place(x=120, y=20)
     Label(success, text="Add New Medicine", font=('Arial', 15, 'bold'), fg='#d1d7e0', bg="#2d283e").place(x=1200, y=80)
@@ -126,74 +218,60 @@ def main_page():
 
     # --End Head section--
     
-
-    # Body section
-
     # --Customer_detail Frame--
     
     lf=LabelFrame(success,text="Customer Data",width=600, height=650, bg="#564f6f",font="10").place(x=20, y=120)
 
-
     # Label
-    Label(lf, text="Name", font=('Helvetica', 12, 'bold'), bg='#092635', fg="#9EC8B9").place(x=40, y=180)
-    Label(lf, text="Age", font=('Helvetica', 12, 'bold'), bg='#092635', fg="#9EC8B9").place(x=40, y=240)
-    Label(lf, text="Gender", font=('Helvetica', 12, 'bold'), bg='#092635', fg="#9EC8B9").place(x=40, y=360)
-    Label(lf, text="Date", font=('Helvetica', 12, 'bold'), bg='#092635', fg="#9EC8B9").place(x=40, y=480)
-    Label(lf, text="City", font=('Helvetica', 12, 'bold'), bg='#092635', fg="#9EC8B9").place(x=40, y=600)
+    Label(lf, text="Customer Id", font=('Helvetica', 12, 'bold'), bg='#092635', fg="#9EC8B9").place(x=40, y=180)
+    Label(lf, text="Name", font=('Helvetica', 12, 'bold'), bg='#092635', fg="#9EC8B9").place(x=40, y=240)
+    Label(lf, text="Age", font=('Helvetica', 12, 'bold'), bg='#092635', fg="#9EC8B9").place(x=40, y=360)
+    Label(lf, text="Gender", font=('Helvetica', 12, 'bold'), bg='#092635', fg="#9EC8B9").place(x=40, y=480)
+    Label(lf, text="Date", font=('Helvetica', 12, 'bold'), bg='#092635', fg="#9EC8B9").place(x=40, y=600)
+    Label(lf, text="City", font=('Helvetica', 12, 'bold'), bg='#092635', fg="#9EC8B9").place(x=40, y=640)
 
-    # Entry
-    nameValue = StringVar()
-    ageValue = StringVar()
-    DateValue = StringVar()
-    cityValue = StringVar()
-
-    nameEntry = Entry(lf, textvariable=nameValue, width=20, bd=2, font=10)
-    ageEntry = Entry(lf, textvariable=ageValue, width=20, bd=2, font=10)
-    DateEntry = tkcalendar.DateEntry(lf, textvariable=DateValue, width=10, bd=2, font=8, date_pattern='dd-mm-yyyy')
-    cityEntry = Entry(lf, textvariable=cityValue, width=10, bd=2, font=10)
+    CustEntry=Entry(lf,width=20,bd=2,font=10)
+    nameEntry = Entry(lf, width=20, bd=2, font=10)
+    ageEntry = Entry(lf, width=20, bd=2, font=10)
+    DateEntry = tkcalendar.DateEntry(lf, width=10, bd=2, font=8, date_pattern='yyyy-mm-dd')
+    cityEntry = Entry(lf, width=10, bd=2, font=10)
 
     # Gender
     gender_combo = Combobox(lf, values=['Male', "Female", "Others"], font="Helvetica 12", state='r', width=14)
-    gender_combo.place(x=120, y=360)
+    gender_combo.place(x=120, y=480)
     gender_combo.set('Male')
-
-    nameEntry.place(x=120, y=180)
-    ageEntry.place(x=120, y=240)
-    DateEntry.place(x=120, y=480)
-    cityEntry.place(x=120, y=600)
+    
+    CustEntry.place(x=150,y=180)
+    nameEntry.place(x=120, y=240)
+    ageEntry.place(x=120, y=360)
+    DateEntry.place(x=120, y=600)
+    cityEntry.place(x=120, y=640)
     
     # --End Customer_detail Frame--
 
     # --Medicine Frame--
 
     rf=LabelFrame(success,text="Medicine Details",width=850, height=300, bg="#564f6f",font="10").place(x=640, y=120)
-    
 
     # Label
     Label(rf, text="Tablet Code", font=('Helvetica', 12, 'bold'), bg='#092635', fg="#9EC8B9").place(x=690, y=150)
     Label(rf, text="Tablet Name", font=('Helvetica', 12, 'bold'), bg='#092635', fg="#9EC8B9").place(x=1055, y=150)
     Label(rf, text="Quantity", font=('Helvetica', 12, 'bold'), bg='#092635', fg="#9EC8B9").place(x=690, y=240)
     Label(rf, text="Price", font=('Helvetica', 12, 'bold'), bg='#092635', fg="#9EC8B9").place(x=1055, y=240)
-    Button(rf,text="Add",font=('Helvetica',15,'bold'),bg='#2d283e',fg="#d1d7e0",width=12,height=2).place(x=750,y=350)
-    Button(rf,text="Update",font=('Helvetica',15,'bold'),bg='#2d283e',fg="#d1d7e0",width=12,height=2).place(x=950,y=350)
-    Button(rf,text="Clear",font=('Helvetica',15,'bold'),bg='#2d283e',fg="#d1d7e0",width=12,height=2).place(x=1150,y=350)
 
-    # Entry
-    CodeValue = StringVar()
-    TabletValue = StringVar()
-    QuanValue = StringVar()
-    priceValue = StringVar()
+    Button(rf,text="Add",font=('Helvetica',15,'bold'),bg='#2d283e',fg="#d1d7e0",width=12,height=2,command=AddTablet).place(x=750,y=350)
+    Button(rf,text="Update",font=('Helvetica',15,'bold'),bg='#2d283e',fg="#d1d7e0",width=12,height=2,command=UpdateTablet).place(x=950,y=350)
+    Button(rf,text="Clear",font=('Helvetica',15,'bold'),bg='#2d283e',fg="#d1d7e0",width=12,height=2,command=ClearTablet).place(x=1150,y=350)
 
-    CodeEntry = Entry(rf, textvariable=CodeValue, width=20, bd=2, font=10)
-    TabletEntry = Entry(rf, textvariable=TabletValue, width=20, bd=2, font=10)
-    QuanEntry = Entry(rf, textvariable=QuanValue, width=20, bd=2, font=10)
-    priceEntry = Entry(rf, textvariable=priceValue, width=20, bd=2, font=10)
+    CodeEntry = Entry(rf, width=20, bd=2, font=10)
+    TabletEntry = Entry(rf, width=20, bd=2, font=10)
+    QuanEntry = Entry(rf, width=20, bd=2, font=10)
+    PriceEntry = Entry(rf,width=20, bd=2, font=10)
 
     CodeEntry.place(x=820, y=150)
     TabletEntry.place(x=1180, y=150)
     QuanEntry.place(x=820, y=240)
-    priceEntry.place(x=1180, y=240)
-    
+    PriceEntry.place(x=1180, y=240)
     
     # --En₫ Medicine Frame--
 
