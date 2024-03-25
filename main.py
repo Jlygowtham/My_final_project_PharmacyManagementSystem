@@ -1,7 +1,7 @@
 from tkinter import *
 from tkinter import messagebox, LabelFrame
 from tkinter.ttk import Combobox,Treeview
-import mysql.connector
+from Database_Connection import connection
 import tkcalendar
 import customtkinter
 from PIL import ImageTk,Image
@@ -9,47 +9,6 @@ from PIL import ImageTk,Image
 customtkinter.set_appearance_mode("System")
 customtkinter.set_default_color_theme("blue")  # Themes: blue (default), dark-blue, green
 
-def AddMedicine():
-    code=codeEntry.get()
-    name=nameEntry.get()
-    disease=disease_combo.get()
-    price=priceEntry.get()
-    
-    
-    try:
-       mysqldb=mysql.connector.connect(host="localhost",user="root",password="",database="pharamacy")
-       mycursor=mysqldb.cursor()
-    
-        # Create the Medicine table if it doesn't exist and insert data
-       mycursor.execute("""
-            CREATE TABLE IF NOT EXISTS Medicine (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                code INT,
-                name VARCHAR(255),
-                disease VARCHAR(255),
-                price DECIMAL(10, 2)
-            )
-        """)
-       if code!='' and name!='' and disease!='' and price!='':
-            sql = "INSERT INTO  Medicine (code,name,disease,price) VALUES (%s, %s, %s, %s)"
-            val = (code,name,disease,price)
-            mycursor.execute(sql, val)
-            mysqldb.commit()
-            messagebox.showinfo("information", "Medicine inserted successfully...")
-
-            codeEntry.delete(0, END)
-            nameEntry.delete(0, END)
-            disease_combo.set('')
-            priceEntry.delete(0, END)
-        
-       else:
-           messagebox.showinfo("Warning", "Enter the Details")
-
-
-    except Exception as e:
-       print(e)
-       mysqldb.rollback()
-       mysqldb.close()
 
 def AddTablet():
     cust=CustEntry.get() 
@@ -64,12 +23,9 @@ def AddTablet():
     quan=QuanEntry.get()
     price=PriceEntry.get()
    
-    try:
-       mysqldb=mysql.connector.connect(host="localhost",user="root",password="",database="pharamacy")
-       mycursor=mysqldb.cursor()
-    
-        # Create the Medicine table if it doesn't exist and insert data
-       mycursor.execute("""
+    mycursor,mysqldb=connection()
+
+    mycursor.execute("""
             CREATE TABLE IF NOT EXISTS Customer (
                 Cust_id INT PRIMARY KEY,
                 Name VARCHAR(255),
@@ -80,7 +36,7 @@ def AddTablet():
             )
         """)
        
-       mycursor.execute("""
+    mycursor.execute("""
             CREATE TABLE IF NOT EXISTS Tablet_Data(
                 Tablet_code INT PRIMARY KEY,
                 Tablet_Name VARCHAR(255),
@@ -91,10 +47,10 @@ def AddTablet():
             )
         """)
 
-       mycursor.execute("SELECT * FROM Customer WHERE Cust_id=%s",(cust,))
-       exist_cust=mycursor.fetchone()
+    mycursor.execute("SELECT * FROM Customer WHERE Cust_id=%s",(cust,))
+    exist_cust=mycursor.fetchone()
 
-       if cust!='' and name!='' and age!='' and date!='' and city!='' and gender!='' and code!='' and tablet!='' and quan!='' and price!='':
+    if cust!='' and name!='' and age!='' and date!='' and city!='' and gender!='' and code!='' and tablet!='' and quan!='' and price!='':
             if not exist_cust:
                 custSql="INSERT INTO Customer (Cust_id,Name,Age,Date,City,Gender) VALUES (%s,%s,%s,%s,%s,%s)"
                 customer_data=(cust,name,age,date,city,gender)
@@ -107,12 +63,8 @@ def AddTablet():
             mysqldb.commit()
             mysqldb.close()
         
-       else:
+    else:
            messagebox.showinfo("Warning", "Enter the Details")
-
-    except mysql.connector.Error as err:
-        print("Error:", err)
-
 
 def ClearTablet():
     CodeEntry.delete(0, END)
@@ -125,24 +77,142 @@ def UpdateTablet():
     tablet=TabletEntry.get() 
     quan=QuanEntry.get()
     price=PriceEntry.get()
+ 
+    mycursor,mysqldb=connection()
 
-    try:
-        mysqldb=mysql.connector.connect(host="localhost", user="root", password="", database="pharamacy")
-        mycursor=mysqldb.cursor()
-
-        updateSql="""
+    updateSql="""
            UPDATE Tablet_Data
            SET Tablet_Name=%s,Quantity = %s,Price=%s
            WHERE Tablet_Code =%s
         """
-        updateData=(tablet,quan,price,code)
-        mycursor.execute(updateSql,updateData)
+    updateData=(tablet,quan,price,code)
+    mycursor.execute(updateSql,updateData)
+    
+    mysqldb.commit()
+    mysqldb.close()
 
-        mysqldb.commit()
-        mysqldb.close()
+def GetValue():
+    CodeEntry.delete(0, END)
+    TabletEntry.delete(0, END)
+    QuanEntry.delete(0, END)
+    PriceEntry.delete(0, END)
+
+    codeId=tree.selection()[0]
+    select=tree.set(codeId)
+
+    CodeEntry.insert(0,select['Code'])
+    TabletEntry.insert(0,select['Tablet Name'])
+    QuanEntry.insert(0,select['Quantity'])
+    PriceEntry.insert(0,select['Price'])
+
+def showValue():
+     cust=CustEntry.get() 
+     mycursor,mysqldb=connection()
+     tree.delete(*tree.get_children())
+     mycursor.execute("SELECT Tablet_code, Tablet_Name, Quantity, Price from Tablet_Data WHERE Cust_id=%s",(cust,))
+     data=mycursor.fetchall()
+     
+     for i, (Tablet_code, Tablet_Name, Quantity, Price) in enumerate(data,start=1):
+          tree.insert("","end",values=(Tablet_code, Tablet_Name, Quantity, Price,Quantity*Price))
+     mysqldb.close()
+
+def RemoveTablet():
+    Code=CodeEntry.get()
+    mycursor,mysqldb=connection()
+
+    deletequery="Delete from Tablet_Data where Tablet_code=%s"
+    val=(Code,)
+
+    mycursor.execute(deletequery,val)
+    mysqldb.commit()
+    mysqldb.close()
+    messagebox.showinfo("information", "Record Deleted successfully...") 
+
+    CodeEntry.delete(0, END)
+    TabletEntry.delete(0, END)
+    QuanEntry.delete(0, END)
+    PriceEntry.delete(0, END)
+    CodeEntry.focus_set()
+
+
+# New-medicine Functions
+    
+def AddMedicine():
+    code=codeEntry.get()
+    name=nameEntry.get()
+    disease=disease_combo.get()
+    price=priceEntry.get()
+
+    mycursor,mysqldb=connection()
+
+    mycursor.execute("""
+            CREATE TABLE IF NOT EXISTS Medicine (
+                code INT PRIMARY KEY,
+                name VARCHAR(255),
+                disease VARCHAR(255),
+                price DECIMAL(10, 2)
+            )
+        """)
+    
+    if code!='' and name!='' and disease!='' and price!='':
+            sql = "INSERT INTO  Medicine (code,name,disease,price) VALUES (%s, %s, %s, %s)"
+            val = (code,name,disease,price)
+            mycursor.execute(sql, val)
+            mysqldb.commit()
+            messagebox.showinfo("information", "Medicine inserted successfully...")
+
+            codeEntry.delete(0, END)
+            nameEntry.delete(0, END)
+            disease_combo.set('')
+            priceEntry.delete(0, END)
         
-    except mysql.connector.Error as err:
-        print("Error:",err)
+    else:
+           messagebox.showinfo("Warning", "Enter the Details")
+
+
+def UpdateMedicine():
+    code=codeEntry.get()
+    name=nameEntry.get()
+    disease=disease_combo.get()
+    price=priceEntry.get()
+
+    mycursor,mysqldb=connection()
+
+    updateQuery="""
+           UPDATE Medicine
+           SET name = %s,disease=%s,price=%s
+           WHERE code =%s
+        """
+    val=(name,disease,price,code)
+
+    mycursor.execute(updateQuery,val)
+    mysqldb.commit()
+    messagebox.showinfo("information", "Record Updated successfully...") 
+
+def RemoveMedicine():
+    code=codeEntry.get()
+    mycursor,mysqldb=connection()
+
+    deleteQuery="Delete from Medicine where code=%s"
+    val=(code,)
+
+    mycursor.execute(deleteQuery,val)
+    mysqldb.commit()
+    messagebox.showinfo("information", "Record Deleted successfully...") 
+
+    codeEntry.delete(0, END)
+    nameEntry.delete(0, END)
+    disease_combo.set('')
+    priceEntry.delete(0, END)
+    codeEntry.focus_set()
+
+def ClearMedicine():
+    codeEntry.delete(0, END)
+    nameEntry.delete(0, END)
+    disease_combo.set('')
+    priceEntry.delete(0, END)
+
+
 
 def new_medicine():
     global codeEntry,nameEntry,priceEntry,disease_combo
@@ -188,13 +258,18 @@ def new_medicine():
 
     buttonEnter = Button(
         mf, text="Update", padx=5, pady=5, width=5,
-        bd=3, font=('Arial', 15), bg=back,fg=fore)
+        bd=3, font=('Arial', 15), bg=back,fg=fore,command=UpdateMedicine)
     buttonEnter.grid(row=5, column=2, columnspan=1)
 
     buttonEnter = Button(
-        mf, text="Clear", padx=5, pady=5, width=5,
-        bd=3, font=('Arial', 15), bg=back,fg=fore)
+        mf, text="Remove", padx=5, pady=5, width=5,
+        bd=3, font=('Arial', 15), bg=back,fg=fore,command=RemoveMedicine)
     buttonEnter.grid(row=5, column=3, columnspan=1)
+
+    buttonEnter = Button(
+        mf, text="Clear", padx=5, pady=5, width=5,
+        bd=3, font=('Arial', 15), bg=back,fg=fore,command=ClearMedicine)
+    buttonEnter.grid(row=5, column=4, columnspan=1)
 
 def main_page():
     app.destroy()
@@ -204,7 +279,7 @@ def main_page():
     success.geometry("%dx%d+0+0" % (app_width, app_height))
     success.config(bg='#2d283e')
 
-    global CustEntry,nameEntry,ageEntry,DateEntry,cityEntry,gender_combo,CodeEntry,TabletEntry,QuanEntry,PriceEntry
+    global tree,CustEntry,nameEntry,ageEntry,DateEntry,cityEntry,gender_combo,CodeEntry,TabletEntry,QuanEntry,PriceEntry
     # --Head section--
     Label(success, text="Pharmacy Management System", font=('Helvetica', 45, 'bold'), fg='#d1d7e0', bg="#2d283e").place(x=120, y=20)
     Label(success, text="Add New Medicine", font=('Arial', 15, 'bold'), fg='#d1d7e0', bg="#2d283e").place(x=1200, y=80)
@@ -259,9 +334,10 @@ def main_page():
     Label(rf, text="Quantity", font=('Helvetica', 12, 'bold'), bg='#092635', fg="#9EC8B9").place(x=690, y=240)
     Label(rf, text="Price", font=('Helvetica', 12, 'bold'), bg='#092635', fg="#9EC8B9").place(x=1055, y=240)
 
-    Button(rf,text="Add",font=('Helvetica',15,'bold'),bg='#2d283e',fg="#d1d7e0",width=12,height=2,command=AddTablet).place(x=750,y=350)
-    Button(rf,text="Update",font=('Helvetica',15,'bold'),bg='#2d283e',fg="#d1d7e0",width=12,height=2,command=UpdateTablet).place(x=950,y=350)
-    Button(rf,text="Clear",font=('Helvetica',15,'bold'),bg='#2d283e',fg="#d1d7e0",width=12,height=2,command=ClearTablet).place(x=1150,y=350)
+    Button(rf,text="Add",font=('Helvetica',15,'bold'),bg='#2d283e',fg="#d1d7e0",width=8,height=2,command=AddTablet).place(x=720,y=320)
+    Button(rf,text="Update",font=('Helvetica',15,'bold'),bg='#2d283e',fg="#d1d7e0",width=8,height=2,command=UpdateTablet).place(x=850,y=320)
+    Button(rf,text="Remove",font=('Helvetica',15,'bold'),bg='#2d283e',fg="#d1d7e0",width=8,height=2,command=RemoveTablet).place(x=990,y=320)
+    Button(rf,text="Clear",font=('Helvetica',15,'bold'),bg='#2d283e',fg="#d1d7e0",width=8,height=2,command=ClearTablet).place(x=1120,y=320)
 
     CodeEntry = Entry(rf, width=20, bd=2, font=10)
     TabletEntry = Entry(rf, width=20, bd=2, font=10)
@@ -276,15 +352,23 @@ def main_page():
     # --En₫ Medicine Frame--
 
     # --Treeview Frame--
-    tf = LabelFrame(success,text="Tablet Details", width=850, height=340, bg="#564f6f")
+    tf = LabelFrame(success,text="Tablet Details", width=650, height=340, bg="#564f6f")
     tf.place(x=640, y=430)
 
-    cols = ('Code', 'Tablet Name', 'Total')
-    tree = Treeview(tf, columns=cols, show='headings',height=13)
+    cols = ('Code', 'Tablet Name','Quantity','Price','Total')
+    tree = Treeview(tf, columns=cols, show='headings', height=13)
     for col in cols:
-        tree.heading(col, text=col)
+         tree.heading(col, text=col)
+
+    col_width = int(650 / len(cols))  
+    for col in cols:
+         tree.column(col, width=col_width)
+
     tree.pack(fill='both', expand=True, padx=15, pady=15)
 
+    showValue()
+    tree.bind('<Double-Button-1>', GetValue)
+     
     # --End Treeview Frame--
     
     success.mainloop()
@@ -310,6 +394,8 @@ app_height = app.winfo_screenheight()
 app.geometry("%dx%d+0+0" % (app_width, app_height))
 app.config(bg='#2d283e')
 app.title('Pharmacy Management system')
+
+
 
 # ----Login form----
 
