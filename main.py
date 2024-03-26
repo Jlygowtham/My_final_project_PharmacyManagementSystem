@@ -22,7 +22,8 @@ def AddTablet():
     tablet=TabletEntry.get() 
     quan=QuanEntry.get()
     price=PriceEntry.get()
-   
+    total=int(quan)*int(price)
+
     mycursor,mysqldb=connection()
 
     mycursor.execute("""
@@ -41,7 +42,8 @@ def AddTablet():
                 Tablet_code INT PRIMARY KEY,
                 Tablet_Name VARCHAR(255),
                 Quantity INT,
-                Price INT,
+                Price DECIMAL(10, 2),
+                Total DECIMAL(10, 2),
                 Cust_id INT,
                 FOREIGN KEY (Cust_id) REFERENCES Customer(Cust_id)
             )
@@ -56,12 +58,18 @@ def AddTablet():
                 customer_data=(cust,name,age,date,city,gender)
                 mycursor.execute(custSql,customer_data)
             
-            tableSql="INSERT INTO Tablet_Data (Tablet_code, Tablet_Name, Quantity, Price, Cust_id) VALUES (%s, %s, %s, %s, %s)"
-            tablet_data = (code, tablet, quan, price, cust)
+            tableSql="INSERT INTO Tablet_Data (Tablet_code, Tablet_Name, Quantity, Price, Total, Cust_id) VALUES (%s, %s, %s, %s,%s, %s)"
+            tablet_data = (code, tablet, quan, price, total,cust)
             mycursor.execute(tableSql, tablet_data)
             
             mysqldb.commit()
             mysqldb.close()
+
+            CodeEntry.delete(0, END)
+            TabletEntry.delete(0, END)
+            QuanEntry.delete(0, END)
+            PriceEntry.delete(0, END)
+            showValue()
         
     else:
            messagebox.showinfo("Warning", "Enter the Details")
@@ -77,44 +85,58 @@ def UpdateTablet():
     tablet=TabletEntry.get() 
     quan=QuanEntry.get()
     price=PriceEntry.get()
- 
+    total=int(quan)*float(price)
+
     mycursor,mysqldb=connection()
 
     updateSql="""
            UPDATE Tablet_Data
-           SET Tablet_Name=%s,Quantity = %s,Price=%s
+           SET Tablet_Name=%s,Quantity = %s,Price=%s,Total=%s
            WHERE Tablet_Code =%s
         """
-    updateData=(tablet,quan,price,code)
+    updateData=(tablet,quan,price,total,code)
     mycursor.execute(updateSql,updateData)
     
     mysqldb.commit()
     mysqldb.close()
 
-def GetValue():
+    CodeEntry.delete(0, END)
+    TabletEntry.delete(0, END)
+    QuanEntry.delete(0, END)
+    PriceEntry.delete(0, END)
+    showValue()
+
+def GetValue(event=None):
     CodeEntry.delete(0, END)
     TabletEntry.delete(0, END)
     QuanEntry.delete(0, END)
     PriceEntry.delete(0, END)
 
-    codeId=tree.selection()[0]
-    select=tree.set(codeId)
+    codeId = tree.selection()[0]
+    select = tree.set(codeId)
 
-    CodeEntry.insert(0,select['Code'])
-    TabletEntry.insert(0,select['Tablet Name'])
-    QuanEntry.insert(0,select['Quantity'])
-    PriceEntry.insert(0,select['Price'])
+    CodeEntry.insert(0, select['Code'])
+    TabletEntry.insert(0, select['Tablet Name'])
+    QuanEntry.insert(0, select['Quantity'])
+    PriceEntry.insert(0, select['Price'])
+
 
 def showValue():
-     cust=CustEntry.get() 
-     mycursor,mysqldb=connection()
-     tree.delete(*tree.get_children())
-     mycursor.execute("SELECT Tablet_code, Tablet_Name, Quantity, Price from Tablet_Data WHERE Cust_id=%s",(cust,))
-     data=mycursor.fetchall()
-     
-     for i, (Tablet_code, Tablet_Name, Quantity, Price) in enumerate(data,start=1):
-          tree.insert("","end",values=(Tablet_code, Tablet_Name, Quantity, Price,Quantity*Price))
-     mysqldb.close()
+    cust = CustEntry.get() 
+    
+    mycursor, mysqldb = connection()
+
+    mycursor.execute("SELECT Tablet_code, Tablet_Name, Quantity, Price, Total from Tablet_Data WHERE Cust_id=%s", (cust,))
+    data = mycursor.fetchall()
+        
+    if len(data) != 0:
+        tree.delete(*tree.get_children())
+        for row in data:
+            tree.insert("", END, values=row)
+        mysqldb.commit()     
+    mysqldb.close()
+
+
 
 def RemoveTablet():
     Code=CodeEntry.get()
@@ -126,13 +148,17 @@ def RemoveTablet():
     mycursor.execute(deletequery,val)
     mysqldb.commit()
     mysqldb.close()
+
+    for item in tree.get_children():
+        if tree.item(item, "values")[0] == Code: 
+            tree.delete(item)
+            break 
     messagebox.showinfo("information", "Record Deleted successfully...") 
 
     CodeEntry.delete(0, END)
     TabletEntry.delete(0, END)
     QuanEntry.delete(0, END)
     PriceEntry.delete(0, END)
-    CodeEntry.focus_set()
 
 
 # New-medicine Functions
@@ -147,7 +173,7 @@ def AddMedicine():
 
     mycursor.execute("""
             CREATE TABLE IF NOT EXISTS Medicine (
-                code INT PRIMARY KEY,
+                code VARCHAR(50) PRIMARY KEY,
                 name VARCHAR(255),
                 disease VARCHAR(255),
                 price DECIMAL(10, 2)
@@ -169,7 +195,7 @@ def AddMedicine():
     else:
            messagebox.showinfo("Warning", "Enter the Details")
 
-
+ 
 def UpdateMedicine():
     code=codeEntry.get()
     name=nameEntry.get()
@@ -188,6 +214,11 @@ def UpdateMedicine():
     mycursor.execute(updateQuery,val)
     mysqldb.commit()
     messagebox.showinfo("information", "Record Updated successfully...") 
+    
+    codeEntry.delete(0, END)
+    nameEntry.delete(0, END)
+    disease_combo.set('')
+    priceEntry.delete(0, END)
 
 def RemoveMedicine():
     code=codeEntry.get()
@@ -363,11 +394,16 @@ def main_page():
     col_width = int(650 / len(cols))  
     for col in cols:
          tree.column(col, width=col_width)
+    
+
+    vsb = Scrollbar(tf, orient="vertical", command=tree.yview)
+    vsb.pack(side="right", fill="y")
+    tree.configure(yscrollcommand=vsb.set)
+
 
     tree.pack(fill='both', expand=True, padx=15, pady=15)
 
-    showValue()
-    tree.bind('<Double-Button-1>', GetValue)
+    tree.bind('<<TreeviewSelect>>', GetValue)
      
     # --End Treeview Frame--
     
