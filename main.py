@@ -9,6 +9,148 @@ from PIL import ImageTk,Image
 customtkinter.set_appearance_mode("System")
 customtkinter.set_default_color_theme("blue")  # Themes: blue (default), dark-blue, green
 
+# New-medicine Functions
+    
+def AddMedicine():
+    code=codeEntry.get()
+    name=nameEntry.get()
+    disease=disease_combo.get()
+    price=priceEntry.get()
+
+    mycursor,mysqldb=connection()
+
+    mycursor.execute("""
+            CREATE TABLE IF NOT EXISTS Medicine (
+                code VARCHAR(50) PRIMARY KEY,
+                name VARCHAR(255),
+                disease VARCHAR(255),
+                price DECIMAL(10, 2)
+            )
+        """)
+    
+    if code!='' and name!='' and disease!='' and price!='':
+            sql = "INSERT INTO  Medicine (code,name,disease,price) VALUES (%s, %s, %s, %s)"
+            val = (code,name,disease,price)
+            mycursor.execute(sql, val)
+            mysqldb.commit()
+            messagebox.showinfo("information", "Medicine inserted successfully...")
+
+            codeEntry.delete(0, END)
+            nameEntry.delete(0, END)
+            disease_combo.set('')
+            priceEntry.delete(0, END)
+        
+    else:
+           messagebox.showinfo("Warning", "Enter the Details")
+
+ 
+def UpdateMedicine():
+    code=codeEntry.get()
+    name=nameEntry.get()
+    disease=disease_combo.get()
+    price=priceEntry.get()
+
+    mycursor,mysqldb=connection()
+
+    updateQuery="""
+           UPDATE Medicine
+           SET name = %s,disease=%s,price=%s
+           WHERE code =%s
+        """
+    val=(name,disease,price,code)
+
+    mycursor.execute(updateQuery,val)
+    mysqldb.commit()
+    messagebox.showinfo("information", "Record Updated successfully...") 
+    
+    codeEntry.delete(0, END)
+    nameEntry.delete(0, END)
+    disease_combo.set('')
+    priceEntry.delete(0, END)
+
+def RemoveMedicine():
+    code=codeEntry.get()
+    mycursor,mysqldb=connection()
+
+    deleteQuery="Delete from Medicine where code=%s"
+    val=(code,)
+
+    mycursor.execute(deleteQuery,val)
+    mysqldb.commit()
+    messagebox.showinfo("information", "Record Deleted successfully...") 
+
+    codeEntry.delete(0, END)
+    nameEntry.delete(0, END)
+    disease_combo.set('')
+    priceEntry.delete(0, END)
+    codeEntry.focus_set()
+
+def ClearMedicine():
+    codeEntry.delete(0, END)
+    nameEntry.delete(0, END)
+    disease_combo.set('')
+    priceEntry.delete(0, END)
+
+
+
+def new_medicine():
+    global codeEntry,nameEntry,priceEntry,disease_combo
+    medicine=Toplevel()
+    medicine.geometry('900x600')
+    medicine.config(bg='#2d283e')
+    medicine_font=('Helvetica', 35, 'bold')
+    fore='#d1d7e0'
+    back="#2d283e"
+    
+    Label(medicine,text='New Medicine',font=medicine_font,fg=fore,bg=back).place(x=250, y=20)
+
+    mf=Frame(medicine, bg="#564f6f")
+    mf.place(x=220, y=150)
+
+    medicine_code = Label(mf, text="Medicine code", font=('Arial bold', 15))
+    Medicine_Name = Label(mf, text="Medicine Name", font=('Arial bold', 15))
+    disease_label=Label(mf, text="Disease", font=('Arial bold', 15))
+    price_label = Label(mf, text="Price", font=('Arial bold', 15))
+
+    medicine_code.grid(row=1, column=0, padx=10, pady=10)
+    Medicine_Name.grid(row=2, column=0, padx=10, pady=10)
+    disease_label.grid(row=3,column=0,padx=10, pady=10)
+    price_label.grid(row=4, column=0, padx=10, pady=10)
+
+    codeEntry = Entry(mf, width=25, bd=5, font=('Arial bold', 15))
+    nameEntry = Entry(mf, width=25, bd=5, font=('Arial bold', 15))
+    priceEntry = Entry(mf, width=25, bd=5, font=('Arial bold', 15))
+
+    codeEntry.grid(row=1, column=1, columnspan=3, padx=5, pady=5)
+    nameEntry.grid(row=2, column=1, columnspan=3, padx=5, pady=5)
+    priceEntry.grid(row=4, column=1, columnspan=3, padx=5, pady=5)
+    
+    disease_combo = Combobox(mf, values=['Heart', "Cold", "Fever"], font="Helvetica 12", state='r', width=14)
+    disease_combo.grid(row=3, column=1, columnspan=3, padx=5, pady=5)
+    disease_combo.set('Select a Disease')
+
+
+    buttonEnter = Button(
+        mf, text="Add", padx=5, pady=5, width=5,
+        bd=3, font=('Arial', 15), bg=back,fg=fore,command=AddMedicine)
+    buttonEnter.grid(row=5, column=1, columnspan=1)
+
+    buttonEnter = Button(
+        mf, text="Update", padx=5, pady=5, width=5,
+        bd=3, font=('Arial', 15), bg=back,fg=fore,command=UpdateMedicine)
+    buttonEnter.grid(row=5, column=2, columnspan=1)
+
+    buttonEnter = Button(
+        mf, text="Remove", padx=5, pady=5, width=5,
+        bd=3, font=('Arial', 15), bg=back,fg=fore,command=RemoveMedicine)
+    buttonEnter.grid(row=5, column=3, columnspan=1)
+
+    buttonEnter = Button(
+        mf, text="Clear", padx=5, pady=5, width=5,
+        bd=3, font=('Arial', 15), bg=back,fg=fore,command=ClearMedicine)
+    buttonEnter.grid(row=5, column=4, columnspan=1)
+
+# --Main Page function--
 
 def AddTablet():
     cust=CustEntry.get() 
@@ -160,147 +302,6 @@ def RemoveTablet():
     QuanEntry.delete(0, END)
     PriceEntry.delete(0, END)
 
-
-# New-medicine Functions
-    
-def AddMedicine():
-    code=codeEntry.get()
-    name=nameEntry.get()
-    disease=disease_combo.get()
-    price=priceEntry.get()
-
-    mycursor,mysqldb=connection()
-
-    mycursor.execute("""
-            CREATE TABLE IF NOT EXISTS Medicine (
-                code VARCHAR(50) PRIMARY KEY,
-                name VARCHAR(255),
-                disease VARCHAR(255),
-                price DECIMAL(10, 2)
-            )
-        """)
-    
-    if code!='' and name!='' and disease!='' and price!='':
-            sql = "INSERT INTO  Medicine (code,name,disease,price) VALUES (%s, %s, %s, %s)"
-            val = (code,name,disease,price)
-            mycursor.execute(sql, val)
-            mysqldb.commit()
-            messagebox.showinfo("information", "Medicine inserted successfully...")
-
-            codeEntry.delete(0, END)
-            nameEntry.delete(0, END)
-            disease_combo.set('')
-            priceEntry.delete(0, END)
-        
-    else:
-           messagebox.showinfo("Warning", "Enter the Details")
-
- 
-def UpdateMedicine():
-    code=codeEntry.get()
-    name=nameEntry.get()
-    disease=disease_combo.get()
-    price=priceEntry.get()
-
-    mycursor,mysqldb=connection()
-
-    updateQuery="""
-           UPDATE Medicine
-           SET name = %s,disease=%s,price=%s
-           WHERE code =%s
-        """
-    val=(name,disease,price,code)
-
-    mycursor.execute(updateQuery,val)
-    mysqldb.commit()
-    messagebox.showinfo("information", "Record Updated successfully...") 
-    
-    codeEntry.delete(0, END)
-    nameEntry.delete(0, END)
-    disease_combo.set('')
-    priceEntry.delete(0, END)
-
-def RemoveMedicine():
-    code=codeEntry.get()
-    mycursor,mysqldb=connection()
-
-    deleteQuery="Delete from Medicine where code=%s"
-    val=(code,)
-
-    mycursor.execute(deleteQuery,val)
-    mysqldb.commit()
-    messagebox.showinfo("information", "Record Deleted successfully...") 
-
-    codeEntry.delete(0, END)
-    nameEntry.delete(0, END)
-    disease_combo.set('')
-    priceEntry.delete(0, END)
-    codeEntry.focus_set()
-
-def ClearMedicine():
-    codeEntry.delete(0, END)
-    nameEntry.delete(0, END)
-    disease_combo.set('')
-    priceEntry.delete(0, END)
-
-
-
-def new_medicine():
-    global codeEntry,nameEntry,priceEntry,disease_combo
-    medicine=Toplevel()
-    medicine.geometry('900x600')
-    medicine.config(bg='#2d283e')
-    medicine_font=('Helvetica', 35, 'bold')
-    fore='#d1d7e0'
-    back="#2d283e"
-    
-    Label(medicine,text='New Medicine',font=medicine_font,fg=fore,bg=back).place(x=250, y=20)
-
-    mf=Frame(medicine, bg="#564f6f")
-    mf.place(x=220, y=150)
-
-    medicine_code = Label(mf, text="Medicine code", font=('Arial bold', 15))
-    Medicine_Name = Label(mf, text="Medicine Name", font=('Arial bold', 15))
-    disease_label=Label(mf, text="Disease", font=('Arial bold', 15))
-    price_label = Label(mf, text="Price", font=('Arial bold', 15))
-
-    medicine_code.grid(row=1, column=0, padx=10, pady=10)
-    Medicine_Name.grid(row=2, column=0, padx=10, pady=10)
-    disease_label.grid(row=3,column=0,padx=10, pady=10)
-    price_label.grid(row=4, column=0, padx=10, pady=10)
-
-    codeEntry = Entry(mf, width=25, bd=5, font=('Arial bold', 15))
-    nameEntry = Entry(mf, width=25, bd=5, font=('Arial bold', 15))
-    priceEntry = Entry(mf, width=25, bd=5, font=('Arial bold', 15))
-
-    codeEntry.grid(row=1, column=1, columnspan=3, padx=5, pady=5)
-    nameEntry.grid(row=2, column=1, columnspan=3, padx=5, pady=5)
-    priceEntry.grid(row=4, column=1, columnspan=3, padx=5, pady=5)
-    
-    disease_combo = Combobox(mf, values=['Heart', "Cold", "Fever"], font="Helvetica 12", state='r', width=14)
-    disease_combo.grid(row=3, column=1, columnspan=3, padx=5, pady=5)
-    disease_combo.set('Select a Disease')
-
-
-    buttonEnter = Button(
-        mf, text="Add", padx=5, pady=5, width=5,
-        bd=3, font=('Arial', 15), bg=back,fg=fore,command=AddMedicine)
-    buttonEnter.grid(row=5, column=1, columnspan=1)
-
-    buttonEnter = Button(
-        mf, text="Update", padx=5, pady=5, width=5,
-        bd=3, font=('Arial', 15), bg=back,fg=fore,command=UpdateMedicine)
-    buttonEnter.grid(row=5, column=2, columnspan=1)
-
-    buttonEnter = Button(
-        mf, text="Remove", padx=5, pady=5, width=5,
-        bd=3, font=('Arial', 15), bg=back,fg=fore,command=RemoveMedicine)
-    buttonEnter.grid(row=5, column=3, columnspan=1)
-
-    buttonEnter = Button(
-        mf, text="Clear", padx=5, pady=5, width=5,
-        bd=3, font=('Arial', 15), bg=back,fg=fore,command=ClearMedicine)
-    buttonEnter.grid(row=5, column=4, columnspan=1)
 
 def main_page():
     app.destroy()
