@@ -4,6 +4,7 @@ from tkinter.ttk import Combobox,Treeview
 from Database_Connection import connection
 import tkcalendar
 import customtkinter
+import re
 from PIL import ImageTk,Image
 
 customtkinter.set_appearance_mode("System")
@@ -164,7 +165,7 @@ def AddTablet():
     tablet=TabletEntry.get() 
     quan=QuanEntry.get()
     price=PriceEntry.get()
-    total=int(quan)*int(price)
+    total=int(quan)*float(price)
 
     mycursor,mysqldb=connection()
 
@@ -181,7 +182,7 @@ def AddTablet():
        
     mycursor.execute("""
             CREATE TABLE IF NOT EXISTS Tablet_Data(
-                Tablet_code INT PRIMARY KEY,
+                Tablet_code VARCHAR(50) PRIMARY KEY,
                 Tablet_Name VARCHAR(255),
                 Quantity INT,
                 Price DECIMAL(10, 2),
@@ -212,6 +213,7 @@ def AddTablet():
             QuanEntry.delete(0, END)
             PriceEntry.delete(0, END)
             showValue()
+            ll.destroy()
         
     else:
            messagebox.showinfo("Warning", "Enter the Details")
@@ -279,7 +281,6 @@ def showValue():
     mysqldb.close()
 
 
-
 def RemoveTablet():
     Code=CodeEntry.get()
     mycursor,mysqldb=connection()
@@ -302,7 +303,62 @@ def RemoveTablet():
     QuanEntry.delete(0, END)
     PriceEntry.delete(0, END)
 
+def updateList():
+    global my_list
 
+    mycursor,mysqldb=connection()
+
+    listsql="Select name from Medicine"
+    mycursor.execute(listsql)
+    result=mycursor.fetchall()
+    
+    my_list=[row for row in result]
+    mysqldb.commit()
+    mysqldb.close()
+    
+def getData(event=None):
+    tablet=TabletEntry.get()
+    ll.delete(0,END)
+    for element in my_list:
+         if tablet.lower() in element[0].lower():
+              ll.insert(END,element[0])
+
+def fillData(s):
+    mycursor,mysqldb=connection()
+    sql="Select code,price from Medicine where name=%s"
+    val=(s,)
+    mycursor.execute(sql,val)
+    result=mycursor.fetchone()
+
+    CodeEntry.delete(0,END)
+    PriceEntry.delete(0,END)
+
+    CodeEntry.insert(0,result[0])
+    PriceEntry.insert(0,result[1])
+    mysqldb.commit()
+    mysqldb.close()
+
+def selectList(event=None):
+    TabletEntry.delete(0,END)
+    select=ll.get(ACTIVE)
+    fillData(select)
+    TabletEntry.insert(0,ll.get(ACTIVE)) 
+
+def listbox(event=None):
+    global ll
+    ll=Listbox(rf,height=5,width='30',relief='flat',bg='white')
+    ll.place(x=1180,y=180)
+    ll.bind('<Down>',my_down)
+    ll.bind('<<ListboxSelect>>',selectList)
+
+
+def my_down(even=None):
+     ll.focus()
+     ll.select_set(0)
+
+def focusOut(event=None):
+    ll.destroy()
+    
 def main_page():
     app.destroy()
     success = Tk()
@@ -311,7 +367,7 @@ def main_page():
     success.geometry("%dx%d+0+0" % (app_width, app_height))
     success.config(bg='#2d283e')
 
-    global tree,CustEntry,nameEntry,ageEntry,DateEntry,cityEntry,gender_combo,CodeEntry,TabletEntry,QuanEntry,PriceEntry
+    global tree,rf,CustEntry,nameEntry,ageEntry,DateEntry,cityEntry,gender_combo,CodeEntry,TabletEntry,QuanEntry,PriceEntry,Tablet_str
     # --Head section--
     Label(success, text="Pharmacy Management System", font=('Helvetica', 45, 'bold'), fg='#d1d7e0', bg="#2d283e").place(x=120, y=20)
     Label(success, text="Add New Medicine", font=('Arial', 15, 'bold'), fg='#d1d7e0', bg="#2d283e").place(x=1200, y=80)
@@ -363,13 +419,15 @@ def main_page():
     # Label
     Label(rf, text="Tablet Code", font=('Helvetica', 12, 'bold'), bg='#092635', fg="#9EC8B9").place(x=690, y=150)
     Label(rf, text="Tablet Name", font=('Helvetica', 12, 'bold'), bg='#092635', fg="#9EC8B9").place(x=1055, y=150)
-    Label(rf, text="Quantity", font=('Helvetica', 12, 'bold'), bg='#092635', fg="#9EC8B9").place(x=690, y=240)
-    Label(rf, text="Price", font=('Helvetica', 12, 'bold'), bg='#092635', fg="#9EC8B9").place(x=1055, y=240)
+    Label(rf, text="Quantity", font=('Helvetica', 12, 'bold'), bg='#092635', fg="#9EC8B9").place(x=690, y=280)
+    Label(rf, text="Price", font=('Helvetica', 12, 'bold'), bg='#092635', fg="#9EC8B9").place(x=1055, y=280)
 
     Button(rf,text="Add",font=('Helvetica',15,'bold'),bg='#2d283e',fg="#d1d7e0",width=8,height=2,command=AddTablet).place(x=720,y=320)
     Button(rf,text="Update",font=('Helvetica',15,'bold'),bg='#2d283e',fg="#d1d7e0",width=8,height=2,command=UpdateTablet).place(x=850,y=320)
     Button(rf,text="Remove",font=('Helvetica',15,'bold'),bg='#2d283e',fg="#d1d7e0",width=8,height=2,command=RemoveTablet).place(x=990,y=320)
     Button(rf,text="Clear",font=('Helvetica',15,'bold'),bg='#2d283e',fg="#d1d7e0",width=8,height=2,command=ClearTablet).place(x=1120,y=320)
+    
+    updateList()
 
     CodeEntry = Entry(rf, width=20, bd=2, font=10)
     TabletEntry = Entry(rf, width=20, bd=2, font=10)
@@ -378,10 +436,16 @@ def main_page():
 
     CodeEntry.place(x=820, y=150)
     TabletEntry.place(x=1180, y=150)
-    QuanEntry.place(x=820, y=240)
-    PriceEntry.place(x=1180, y=240)
+    QuanEntry.place(x=820, y=280)
+    PriceEntry.place(x=1180, y=280)
     
+    TabletEntry.bind("<FocusIn>", listbox)
+    TabletEntry.bind('<KeyRelease>',getData)
     # --En₫ Medicine Frame--
+    
+    # --Listbox--
+
+
 
     # --Treeview Frame--
     tf = LabelFrame(success,text="Tablet Details", width=650, height=340, bg="#564f6f")
