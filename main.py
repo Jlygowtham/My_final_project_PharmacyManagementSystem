@@ -89,7 +89,7 @@ def RemoveMedicine():
 def ClearMedicine():
     codeEntry.delete(0, END)
     nameEntry.delete(0, END)
-    disease_combo.set('')
+    disease_combo.set('Select a Disease')
     priceEntry.delete(0, END)
 
 
@@ -126,7 +126,7 @@ def new_medicine():
     nameEntry.grid(row=2, column=1, columnspan=3, padx=5, pady=5)
     priceEntry.grid(row=4, column=1, columnspan=3, padx=5, pady=5)
     
-    disease_combo = Combobox(mf, values=['Heart', "Cold", "Fever"], font="Helvetica 12", state='r', width=14)
+    disease_combo = Combobox(mf, values=['Allergy','Asthma','Cholesterol','Cough and Cold','Diabetes','Fever','Gastrointestinal Disorders','Hypertension','Other General Diseases','Pain'], font="Helvetica 12", state='r', width=22)
     disease_combo.grid(row=3, column=1, columnspan=3, padx=5, pady=5)
     disease_combo.set('Select a Disease')
 
@@ -158,6 +158,7 @@ def AddTablet():
     name=nameEntry.get() 
     age=ageEntry.get() 
     date=DateEntry.get() 
+    number=NumberEntry.get()
     city=cityEntry.get() 
     gender=gender_combo.get() 
 
@@ -175,6 +176,7 @@ def AddTablet():
                 Name VARCHAR(255),
                 Age INT,
                 date DATE,
+                PhoneNumber VARCHAR(10),
                 City VARCHAR(255),
                 Gender VARCHAR(20)
             )
@@ -197,8 +199,8 @@ def AddTablet():
 
     if cust!='' and name!='' and age!='' and date!='' and city!='' and gender!='' and code!='' and tablet!='' and quan!='' and price!='':
             if not exist_cust:
-                custSql="INSERT INTO Customer (Cust_id,Name,Age,Date,City,Gender) VALUES (%s,%s,%s,%s,%s,%s)"
-                customer_data=(cust,name,age,date,city,gender)
+                custSql="INSERT INTO Customer (Cust_id,Name,Age,Date,PhoneNumber,City,Gender) VALUES (%s,%s,%s,%s,%s,%s,%s)"
+                customer_data=(cust,name,age,date,number,city,gender)
                 mycursor.execute(custSql,customer_data)
             
             tableSql="INSERT INTO Tablet_Data (Tablet_code, Tablet_Name, Quantity, Price, Total, Cust_id) VALUES (%s, %s, %s, %s,%s, %s)"
@@ -358,16 +360,49 @@ def my_down(even=None):
 
 def focusOut(event=None):
     ll.destroy()
+
+
+# Invoice Section
     
+def Invoice(event=None):
+    success.destroy()
+    bill = Tk()
+    app_width = bill.winfo_screenwidth()
+    app_height = bill.winfo_screenheight()
+    bill.geometry("%dx%d+0+0" % (app_width, app_height))
+    bill.config(bg='#2d283e')
+
+    textarea=Text(bill,font='Consolas 15',width=65,height=28)
+    textarea.place(x=400,y=60)
+
+    textarea.insert(END,"\t \t \t CYBER PHARMACY")
+    textarea.insert(END,"\n \t \t142, Four roads, Salem-636004")
+    textarea.insert(END,"\n \t \t \tPh.no: 9765786501")
+
+    textarea.insert(END, "\n \n \n Bill Number: \t \t \t \t \t  Date:")
+    textarea.insert(END, "\n Customer Name: \t \t \t \t \t  Ph.no:")
+
+    textarea.insert(END,"\n \n ===============================================================")
+    textarea.insert(END,"\n Tablet Name \t\t\t Quantity \t\t Price \t\t Total")
+    textarea.insert(END,"\n ===============================================================")
+    textarea.insert(END,"\n ===============================================================")
+
+    textarea.insert(END,"\n \n ---------------------------------------------------------------")
+    textarea.insert(END,"\n Total:")
+    textarea.insert(END,"\n ---------------------------------------------------------------")
+
+# End of Invoice Section
+
 def main_page():
     app.destroy()
+
+    global success,tree,rf,CustEntry,nameEntry,ageEntry,DateEntry,NumberEntry,cityEntry,gender_combo,CodeEntry,TabletEntry,QuanEntry,PriceEntry,Tablet_str
     success = Tk()
     app_width = success.winfo_screenwidth()
     app_height = success.winfo_screenheight()
     success.geometry("%dx%d+0+0" % (app_width, app_height))
     success.config(bg='#2d283e')
 
-    global tree,rf,CustEntry,nameEntry,ageEntry,DateEntry,cityEntry,gender_combo,CodeEntry,TabletEntry,QuanEntry,PriceEntry,Tablet_str
     # --Head section--
     Label(success, text="Pharmacy Management System", font=('Helvetica', 45, 'bold'), fg='#d1d7e0', bg="#2d283e").place(x=120, y=20)
     Label(success, text="Add New Medicine", font=('Arial', 15, 'bold'), fg='#d1d7e0', bg="#2d283e").place(x=1200, y=80)
@@ -389,6 +424,7 @@ def main_page():
     Label(lf, text="Customer Id", font=('Helvetica', 12, 'bold'), bg='#092635', fg="#9EC8B9").place(x=40, y=180)
     Label(lf, text="Name", font=('Helvetica', 12, 'bold'), bg='#092635', fg="#9EC8B9").place(x=40, y=240)
     Label(lf, text="Age", font=('Helvetica', 12, 'bold'), bg='#092635', fg="#9EC8B9").place(x=40, y=360)
+    Label(lf, text="Phone Number", font=('Helvetica', 12, 'bold'), bg='#092635', fg="#9EC8B9").place(x=40, y=420)
     Label(lf, text="Gender", font=('Helvetica', 12, 'bold'), bg='#092635', fg="#9EC8B9").place(x=40, y=480)
     Label(lf, text="Date", font=('Helvetica', 12, 'bold'), bg='#092635', fg="#9EC8B9").place(x=40, y=600)
     Label(lf, text="City", font=('Helvetica', 12, 'bold'), bg='#092635', fg="#9EC8B9").place(x=40, y=640)
@@ -397,24 +433,26 @@ def main_page():
     nameEntry = Entry(lf, width=20, bd=2, font=10)
     ageEntry = Entry(lf, width=20, bd=2, font=10)
     DateEntry = tkcalendar.DateEntry(lf, width=10, bd=2, font=8, date_pattern='yyyy-mm-dd')
+    NumberEntry=Entry(lf,width=20,bd=2,font=10)
     cityEntry = Entry(lf, width=10, bd=2, font=10)
 
     # Gender
     gender_combo = Combobox(lf, values=['Male', "Female", "Others"], font="Helvetica 12", state='r', width=14)
     gender_combo.place(x=120, y=480)
-    gender_combo.set('Male')
+    gender_combo.set('Select a Gender')
     
     CustEntry.place(x=150,y=180)
     nameEntry.place(x=120, y=240)
     ageEntry.place(x=120, y=360)
     DateEntry.place(x=120, y=600)
+    NumberEntry.place(x=180,y=420)
     cityEntry.place(x=120, y=640)
     
     # --End Customer_detail Frame--
 
     # --Medicine Frame--
 
-    rf=LabelFrame(success,text="Medicine Details",width=850, height=300, bg="#564f6f",font="10").place(x=640, y=120)
+    rf=LabelFrame(success,text="Medicine Details",width=850, height=275, bg="#564f6f",font="10").place(x=640, y=120)
 
     # Label
     Label(rf, text="Tablet Code", font=('Helvetica', 12, 'bold'), bg='#092635', fg="#9EC8B9").place(x=690, y=150)
@@ -443,20 +481,17 @@ def main_page():
     TabletEntry.bind('<KeyRelease>',getData)
     # --En₫ Medicine Frame--
     
-    # --Listbox--
-
-
 
     # --Treeview Frame--
     tf = LabelFrame(success,text="Tablet Details", width=650, height=340, bg="#564f6f")
-    tf.place(x=640, y=430)
+    tf.place(x=640, y=410)
 
     cols = ('Code', 'Tablet Name','Quantity','Price','Total')
-    tree = Treeview(tf, columns=cols, show='headings', height=13)
+    tree = Treeview(tf, columns=cols, show='headings', height=10)
     for col in cols:
          tree.heading(col, text=col)
 
-    col_width = int(650 / len(cols))  
+    col_width = int(798 / len(cols))  
     for col in cols:
          tree.column(col, width=col_width)
     
@@ -472,6 +507,10 @@ def main_page():
      
     # --End Treeview Frame--
     
+
+    # --Invoice Button--
+
+    Button(success,text="Print Invoice",font=('Helvetica',15,'bold'),bg='#2d283e',fg="#d1d7e0",width=16,height=2,command=Invoice).place(x=960,y=700)
     success.mainloop()
 
 
@@ -519,6 +558,7 @@ passEntry=Entry(loginFrame,textvariable=passValue,width=20,bd=1,font=10,highligh
 Button(loginFrame,text="Login",font=('Helvetica', 15,'bold'),bg='#2d283e',fg="#d1d7e0",width=12,height=2,command=login).place(x=560,y=550)
 Button(loginFrame,text="Clear",font=('Helvetica',15,'bold'),bg='#2d283e',fg="#d1d7e0",width=12,height=2,command=clear).place(x=760,y=550)
 Button(loginFrame,text='main_page',command=main_page).place(x=960,y=550)
+Button(loginFrame,text='Invoice',command=Invoice).place(x=1060,y=550)
 # ---- End Login Form ----
 
 app.mainloop()
