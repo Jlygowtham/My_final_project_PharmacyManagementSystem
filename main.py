@@ -7,8 +7,6 @@ import customtkinter
 import random
 from PIL import ImageTk,Image
 
-customtkinter.set_appearance_mode("System")
-customtkinter.set_default_color_theme("blue")  # Themes: blue (default), dark-blue, green
 
 # New-medicine Functions
     
@@ -154,6 +152,7 @@ def new_medicine():
 # --Main Page function--
 
 def AddTablet():
+    
     cust=CustEntry.get() 
     name=nameEntry.get() 
     age=ageEntry.get() 
@@ -173,6 +172,7 @@ def AddTablet():
     mycursor.execute("""
             CREATE TABLE IF NOT EXISTS Customer (
                 Cust_id INT PRIMARY KEY,
+                Bill_Number INT,
                 Name VARCHAR(255),
                 Age INT,
                 date DATE,
@@ -199,8 +199,8 @@ def AddTablet():
 
     if cust!='' and name!='' and age!='' and date!='' and city!='' and gender!='' and code!='' and tablet!='' and quan!='' and price!='':
             if not exist_cust:
-                custSql="INSERT INTO Customer (Cust_id,Name,Age,Date,PhoneNumber,City,Gender) VALUES (%s,%s,%s,%s,%s,%s,%s)"
-                customer_data=(cust,name,age,date,number,city,gender)
+                custSql="INSERT INTO Customer (Cust_id,Bill_Number,Name,Age,Date,PhoneNumber,City,Gender) VALUES (%s,%s,%s,%s,%s,%s,%s,%s)"
+                customer_data=(cust,billNum,name,age,date,number,city,gender)
                 mycursor.execute(custSql,customer_data)
             
             tableSql="INSERT INTO Tablet_Data (Tablet_code, Tablet_Name, Quantity, Price, Total, Cust_id) VALUES (%s, %s, %s, %s,%s, %s)"
@@ -376,7 +376,7 @@ def Invoice(event=None):
     
     custName=c1.get()
     custPhone=p1.get()
-    billNum=random.randint(1,100)
+    
     CusDate=d1.get()
     total=0
 
@@ -547,6 +547,7 @@ app.config(bg='#2d283e')
 app.title('Pharmacy Management system')
 
 tree_list=[]
+billNum=random.randint(1,300)
 # ----Login form----
 
 loginFrame=Frame(app,width=1200,height=600,bg="#564f6f").place(x=200,y=100)
