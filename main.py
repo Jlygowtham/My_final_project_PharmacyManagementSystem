@@ -4,7 +4,7 @@ from tkinter.ttk import Combobox,Treeview
 from Database_Connection import connection
 import tkcalendar
 import customtkinter
-import re
+import random
 from PIL import ImageTk,Image
 
 customtkinter.set_appearance_mode("System")
@@ -184,7 +184,7 @@ def AddTablet():
        
     mycursor.execute("""
             CREATE TABLE IF NOT EXISTS Tablet_Data(
-                Tablet_code VARCHAR(50) PRIMARY KEY,
+                Tablet_code VARCHAR(50),
                 Tablet_Name VARCHAR(255),
                 Quantity INT,
                 Price DECIMAL(10, 2),
@@ -216,6 +216,7 @@ def AddTablet():
             PriceEntry.delete(0, END)
             showValue()
             ll.destroy()
+            ll.delete(0,END)
         
     else:
            messagebox.showinfo("Warning", "Enter the Details")
@@ -252,37 +253,6 @@ def UpdateTablet():
     PriceEntry.delete(0, END)
     showValue()
 
-def GetValue(event=None):
-    CodeEntry.delete(0, END)
-    TabletEntry.delete(0, END)
-    QuanEntry.delete(0, END)
-    PriceEntry.delete(0, END)
-
-    codeId = tree.selection()[0]
-    select = tree.set(codeId)
-
-    CodeEntry.insert(0, select['Code'])
-    TabletEntry.insert(0, select['Tablet Name'])
-    QuanEntry.insert(0, select['Quantity'])
-    PriceEntry.insert(0, select['Price'])
-
-
-def showValue():
-    cust = CustEntry.get() 
-    
-    mycursor, mysqldb = connection()
-
-    mycursor.execute("SELECT Tablet_code, Tablet_Name, Quantity, Price, Total from Tablet_Data WHERE Cust_id=%s", (cust,))
-    data = mycursor.fetchall()
-        
-    if len(data) != 0:
-        tree.delete(*tree.get_children())
-        for row in data:
-            tree.insert("", END, values=row)
-        mysqldb.commit()     
-    mysqldb.close()
-
-
 def RemoveTablet():
     Code=CodeEntry.get()
     mycursor,mysqldb=connection()
@@ -305,18 +275,53 @@ def RemoveTablet():
     QuanEntry.delete(0, END)
     PriceEntry.delete(0, END)
 
+def GetValue(event=None):
+    CodeEntry.delete(0, END)
+    TabletEntry.delete(0, END)
+    QuanEntry.delete(0, END)
+    PriceEntry.delete(0, END)
+
+    codeId = tree.selection()[0]
+    select = tree.set(codeId)
+
+    CodeEntry.insert(0, select['Code'])
+    TabletEntry.insert(0, select['Tablet Name'])
+    QuanEntry.insert(0, select['Quantity'])
+    PriceEntry.insert(0, select['Price'])
+
+def showValue():
+    cust = CustEntry.get() 
+    mycursor, mysqldb = connection()
+    mycursor.execute("SELECT Tablet_code, Tablet_Name, Quantity, Price, Total from Tablet_Data WHERE Cust_id=%s", (cust,))
+    data = mycursor.fetchall()
+        
+    if len(data) != 0:
+        tree.delete(*tree.get_children())
+        for row in data:
+            new_row=list(row)
+            new_row[3]=float(new_row[3])
+            new_row[4]=float(new_row[4])
+            
+            found=False
+            for i,exist_row in enumerate(tree_list):
+                 if exist_row[:2]==new_row[:2]:
+                      tree_list[i]=new_row
+                      found=True
+                      break
+            if not found:
+                 tree_list.append(new_row)
+            tree.insert("", END, values=row)
+    mysqldb.close()
+
+
 def updateList():
     global my_list
-
     mycursor,mysqldb=connection()
-
     listsql="Select name from Medicine"
     mycursor.execute(listsql)
     result=mycursor.fetchall()
     
     my_list=[row for row in result]
-    mysqldb.commit()
-    mysqldb.close()
     
 def getData(event=None):
     tablet=TabletEntry.get()
@@ -337,7 +342,6 @@ def fillData(s):
 
     CodeEntry.insert(0,result[0])
     PriceEntry.insert(0,result[1])
-    mysqldb.commit()
     mysqldb.close()
 
 def selectList(event=None):
@@ -358,8 +362,6 @@ def my_down(even=None):
      ll.focus()
      ll.select_set(0)
 
-def focusOut(event=None):
-    ll.destroy()
 
 
 # Invoice Section
@@ -371,6 +373,12 @@ def Invoice(event=None):
     app_height = bill.winfo_screenheight()
     bill.geometry("%dx%d+0+0" % (app_width, app_height))
     bill.config(bg='#2d283e')
+    
+    custName=c1.get()
+    custPhone=p1.get()
+    billNum=random.randint(1,100)
+    CusDate=d1.get()
+    total=0
 
     textarea=Text(bill,font='Consolas 15',width=65,height=28)
     textarea.place(x=400,y=60)
@@ -379,24 +387,26 @@ def Invoice(event=None):
     textarea.insert(END,"\n \t \t142, Four roads, Salem-636004")
     textarea.insert(END,"\n \t \t \tPh.no: 9765786501")
 
-    textarea.insert(END, "\n \n \n Bill Number: \t \t \t \t \t  Date:")
-    textarea.insert(END, "\n Customer Name: \t \t \t \t \t  Ph.no:")
+    textarea.insert(END, f"\n \n \n Bill Number: {billNum} \t \t \t \t \t  Date: {CusDate}")
+    textarea.insert(END, f"\n Customer Name: {custName} \t \t \t \t \t  Ph.no: {custPhone}")
 
     textarea.insert(END,"\n \n ===============================================================")
     textarea.insert(END,"\n Tablet Name \t\t\t Quantity \t\t Price \t\t Total")
     textarea.insert(END,"\n ===============================================================")
+    for item in tree_list:
+         total+=item[4]
+         textarea.insert(END,f"\n {item[1]} \t\t\t {item[2]} \t\t {item[3]} \t\t {item[4]}")
     textarea.insert(END,"\n ===============================================================")
 
     textarea.insert(END,"\n \n ---------------------------------------------------------------")
-    textarea.insert(END,"\n Total:")
+    textarea.insert(END,f"\n Total: \t\t\t\t\t\t\t {total}")
     textarea.insert(END,"\n ---------------------------------------------------------------")
-
 # End of Invoice Section
 
 def main_page():
     app.destroy()
 
-    global success,tree,rf,CustEntry,nameEntry,ageEntry,DateEntry,NumberEntry,cityEntry,gender_combo,CodeEntry,TabletEntry,QuanEntry,PriceEntry,Tablet_str
+    global success,tree,rf,c1,p1,d1,CustEntry,nameEntry,ageEntry,DateEntry,NumberEntry,cityEntry,gender_combo,CodeEntry,TabletEntry,QuanEntry,PriceEntry,Tablet_str
     success = Tk()
     app_width = success.winfo_screenwidth()
     app_height = success.winfo_screenheight()
@@ -428,12 +438,16 @@ def main_page():
     Label(lf, text="Gender", font=('Helvetica', 12, 'bold'), bg='#092635', fg="#9EC8B9").place(x=40, y=480)
     Label(lf, text="Date", font=('Helvetica', 12, 'bold'), bg='#092635', fg="#9EC8B9").place(x=40, y=600)
     Label(lf, text="City", font=('Helvetica', 12, 'bold'), bg='#092635', fg="#9EC8B9").place(x=40, y=640)
+    
+    c1=StringVar()
+    p1=StringVar()
+    d1=StringVar()
 
     CustEntry=Entry(lf,width=20,bd=2,font=10)
-    nameEntry = Entry(lf, width=20, bd=2, font=10)
+    nameEntry = Entry(lf, width=20, bd=2, font=10,textvariable=c1)
     ageEntry = Entry(lf, width=20, bd=2, font=10)
-    DateEntry = tkcalendar.DateEntry(lf, width=10, bd=2, font=8, date_pattern='yyyy-mm-dd')
-    NumberEntry=Entry(lf,width=20,bd=2,font=10)
+    DateEntry = tkcalendar.DateEntry(lf, width=10, bd=2, font=8, date_pattern='yyyy-mm-dd',textvariable=d1)
+    NumberEntry=Entry(lf,width=20,bd=2,font=10,textvariable=p1)
     cityEntry = Entry(lf, width=10, bd=2, font=10)
 
     # Gender
@@ -466,7 +480,7 @@ def main_page():
     Button(rf,text="Clear",font=('Helvetica',15,'bold'),bg='#2d283e',fg="#d1d7e0",width=8,height=2,command=ClearTablet).place(x=1120,y=320)
     
     updateList()
-
+    
     CodeEntry = Entry(rf, width=20, bd=2, font=10)
     TabletEntry = Entry(rf, width=20, bd=2, font=10)
     QuanEntry = Entry(rf, width=20, bd=2, font=10)
@@ -481,7 +495,6 @@ def main_page():
     TabletEntry.bind('<KeyRelease>',getData)
     # --En₫ Medicine Frame--
     
-
     # --Treeview Frame--
     tf = LabelFrame(success,text="Tablet Details", width=650, height=340, bg="#564f6f")
     tf.place(x=640, y=410)
@@ -506,10 +519,8 @@ def main_page():
     tree.bind('<<TreeviewSelect>>', GetValue)
      
     # --End Treeview Frame--
-    
 
     # --Invoice Button--
-
     Button(success,text="Print Invoice",font=('Helvetica',15,'bold'),bg='#2d283e',fg="#d1d7e0",width=16,height=2,command=Invoice).place(x=960,y=700)
     success.mainloop()
 
@@ -535,8 +546,7 @@ app.geometry("%dx%d+0+0" % (app_width, app_height))
 app.config(bg='#2d283e')
 app.title('Pharmacy Management system')
 
-
-
+tree_list=[]
 # ----Login form----
 
 loginFrame=Frame(app,width=1200,height=600,bg="#564f6f").place(x=200,y=100)
