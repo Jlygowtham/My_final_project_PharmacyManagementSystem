@@ -3,7 +3,7 @@ from tkinter import messagebox, LabelFrame
 from tkinter.ttk import Combobox,Treeview
 from Database_Connection import connection
 import tkcalendar
-import customtkinter
+from tkinter import ttk
 import random
 from PIL import ImageTk,Image
 
@@ -25,7 +25,7 @@ def AddMedicine():
                 disease VARCHAR(255),
                 price DECIMAL(10, 2)
             )
-        """)
+        """) 
     
     if code!='' and name!='' and disease!='' and price!='':
             sql = "INSERT INTO  Medicine (code,name,disease,price) VALUES (%s, %s, %s, %s)"
@@ -95,69 +95,66 @@ def ClearMedicine():
 def new_medicine():
     global codeEntry,nameEntry,priceEntry,disease_combo
     medicine=Toplevel()
+    iconImg=PhotoImage(file="D:\\MCA_MIni_Final_project\\Final Year project\\Pharmacy Mangement System code\\assets\\icon.png")
+    medicine.iconphoto(False,iconImg)
     medicine.geometry('900x600')
-    medicine.config(bg='#2d283e')
-    medicine_font=('Helvetica', 35, 'bold')
-    fore='#d1d7e0'
-    back="#2d283e"
+    medicine.config(bg=Background)
+    medicine.title('New Medicine')
+    medicine_font=(fontname, 45, 'bold')
+
     
-    Label(medicine,text='New Medicine',font=medicine_font,fg=fore,bg=back).place(x=250, y=20)
+    Label(medicine,text='New Medicine',font=medicine_font,fg=foreground,bg=Background).place(x=290, y=50)
 
-    mf=Frame(medicine, bg="#564f6f")
-    mf.place(x=220, y=150)
+    mf=LabelFrame(medicine,highlightbackground=foreground,highlightthickness=5,highlightcolor=foreground,bd=0,width=600,fg=foreground, height=320, bg=Background)
+    mf.place(x=170, y=150)
 
-    medicine_code = Label(mf, text="Medicine code", font=('Arial bold', 15))
-    Medicine_Name = Label(mf, text="Medicine Name", font=('Arial bold', 15))
-    disease_label=Label(mf, text="Disease", font=('Arial bold', 15))
-    price_label = Label(mf, text="Price", font=('Arial bold', 15))
+    Label(mf, text="Medicine code", font=(fontname,19,'bold'),bg=Background, fg=foreground).place(x=40,y=30)
+    Label(mf, text="Medicine Name", font=(fontname,19,'bold'),bg=Background, fg=foreground).place(x=40,y=100)
+    Label(mf, text="Disease", font=(fontname,19,'bold'),bg=Background, fg=foreground).place(x=40,y=170)
+    Label(mf, text="Price", font=(fontname,19,'bold'),bg=Background, fg=foreground).place(x=40,y=240)
 
-    medicine_code.grid(row=1, column=0, padx=10, pady=10)
-    Medicine_Name.grid(row=2, column=0, padx=10, pady=10)
-    disease_label.grid(row=3,column=0,padx=10, pady=10)
-    price_label.grid(row=4, column=0, padx=10, pady=10)
+    codeEntry = Entry(mf,font=10,highlightthickness=2,highlightcolor=Background, width=20, bd=2)
+    nameEntry = Entry(mf,  width=20,bd=2,font=10,highlightthickness=2,highlightcolor=Background)
+    priceEntry = Entry(mf, width=20,bd=2,font=10,highlightthickness=2,highlightcolor=Background)
 
-    codeEntry = Entry(mf, width=25, bd=5, font=('Arial bold', 15))
-    nameEntry = Entry(mf, width=25, bd=5, font=('Arial bold', 15))
-    priceEntry = Entry(mf, width=25, bd=5, font=('Arial bold', 15))
-
-    codeEntry.grid(row=1, column=1, columnspan=3, padx=5, pady=5)
-    nameEntry.grid(row=2, column=1, columnspan=3, padx=5, pady=5)
-    priceEntry.grid(row=4, column=1, columnspan=3, padx=5, pady=5)
+    codeEntry.place(x=260,y=30)
+    nameEntry.place(x=260,y=100)
+    priceEntry.place(x=260,y=240)
     
-    disease_combo = Combobox(mf, values=['Allergy','Asthma','Cholesterol','Cough and Cold','Diabetes','Fever','Gastrointestinal Disorders','Hypertension','Other General Diseases','Pain'], font="Helvetica 12", state='r', width=22)
-    disease_combo.grid(row=3, column=1, columnspan=3, padx=5, pady=5)
+    disease_combo = Combobox(mf, values=['Allergy','Asthma','Cholesterol','Cough and Cold','Diabetes','Fever','Gastrointestinal Disorders','Hypertension','Other General Diseases','Pain'], font="Consolas 15", state='r', width=19)
+    disease_combo.place(x=260,y=170)
     disease_combo.set('Select a Disease')
 
 
     buttonEnter = Button(
-        mf, text="Add", padx=5, pady=5, width=5,
-        bd=3, font=('Arial', 15), bg=back,fg=fore,command=AddMedicine)
-    buttonEnter.grid(row=5, column=1, columnspan=1)
+        medicine, text="Add", height=1, width=6,
+        bd=3, font=(fontname, 18), bg=buttBack,fg=Background,command=AddMedicine)
+    buttonEnter.place(x=250,y=480)
 
     buttonEnter = Button(
-        mf, text="Update", padx=5, pady=5, width=5,
-        bd=3, font=('Arial', 15), bg=back,fg=fore,command=UpdateMedicine)
-    buttonEnter.grid(row=5, column=2, columnspan=1)
+        medicine, text="Update",height=1, width=6,
+        bd=3, font=(fontname, 18), bg=buttBack,fg=Background,command=UpdateMedicine)
+    buttonEnter.place(x=365,y=480)
 
     buttonEnter = Button(
-        mf, text="Remove", padx=5, pady=5, width=5,
-        bd=3, font=('Arial', 15), bg=back,fg=fore,command=RemoveMedicine)
-    buttonEnter.grid(row=5, column=3, columnspan=1)
+        medicine, text="Remove", height=1, width=6,
+        bd=3, font=(fontname, 18), bg=buttBack,fg=Background,command=RemoveMedicine)
+    buttonEnter.place(x=480,y=480)
 
     buttonEnter = Button(
-        mf, text="Clear", padx=5, pady=5, width=5,
-        bd=3, font=('Arial', 15), bg=back,fg=fore,command=ClearMedicine)
-    buttonEnter.grid(row=5, column=4, columnspan=1)
+        medicine, text="Clear", height=1, width=6,
+        bd=3, font=(fontname, 18), bg=buttBack,fg=Background,command=ClearMedicine)
+    buttonEnter.place(x=595,y=480)
 
 # --Main Page function--
 
 def AddTablet():
     
     cust=CustEntry.get() 
-    name=nameEntry.get() 
+    name=c1.get() 
     age=ageEntry.get() 
-    date=DateEntry.get() 
-    number=NumberEntry.get()
+    date=d1.get() 
+    number=p1.get()
     city=cityEntry.get() 
     gender=gender_combo.get() 
 
@@ -352,8 +349,8 @@ def selectList(event=None):
 
 def listbox(event=None):
     global ll
-    ll=Listbox(rf,height=5,width='30',relief='flat',bg='white')
-    ll.place(x=1180,y=180)
+    ll=Listbox(rf,height=4,width='34',relief='flat',bg='white')
+    ll.place(x=1225,y=190)
     ll.bind('<Down>',my_down)
     ll.bind('<<ListboxSelect>>',selectList)
 
@@ -363,16 +360,18 @@ def my_down(even=None):
      ll.select_set(0)
 
 
-
 # Invoice Section
     
 def Invoice(event=None):
     success.destroy()
     bill = Tk()
+    iconImg=PhotoImage(file="D:\\MCA_MIni_Final_project\\Final Year project\\Pharmacy Mangement System code\\assets\\icon.png")
+    bill.iconphoto(False,iconImg)
     app_width = bill.winfo_screenwidth()
     app_height = bill.winfo_screenheight()
     bill.geometry("%dx%d+0+0" % (app_width, app_height))
-    bill.config(bg='#2d283e')
+    bill.config(bg=Background)
+    bill.title('Cyber Pharmacy Invoice')
     
     custName=c1.get()
     custPhone=p1.get()
@@ -380,7 +379,13 @@ def Invoice(event=None):
     CusDate=d1.get()
     total=0
 
-    textarea=Text(bill,font='Consolas 15',width=65,height=28)
+    bill_icon = PhotoImage(file="assets/icon.png").subsample(4, 4)
+
+    icon_label = Label(bill,bg=Background, image=bill_icon)
+    icon_label.place(x=200,y=40)
+
+
+    textarea=Text(bill,padx=8,pady=8,bg=Background,highlightbackground=foreground,highlightcolor=foreground,highlightthickness=3,font='Consolas 15',width=65,height=28)
     textarea.place(x=400,y=60)
 
     textarea.insert(END,"\t \t \t CYBER PHARMACY")
@@ -401,26 +406,37 @@ def Invoice(event=None):
     textarea.insert(END,"\n \n ---------------------------------------------------------------")
     textarea.insert(END,f"\n Total: \t\t\t\t\t\t\t {total}")
     textarea.insert(END,"\n ---------------------------------------------------------------")
+
+    bill.mainloop()
 # End of Invoice Section
 
 def main_page():
     app.destroy()
-
     global success,tree,rf,c1,p1,d1,CustEntry,nameEntry,ageEntry,DateEntry,NumberEntry,cityEntry,gender_combo,CodeEntry,TabletEntry,QuanEntry,PriceEntry,Tablet_str
     success = Tk()
     app_width = success.winfo_screenwidth()
     app_height = success.winfo_screenheight()
+    iconImg=PhotoImage(file="D:\\MCA_MIni_Final_project\\Final Year project\\Pharmacy Mangement System code\\assets\\icon.png")
+    success.iconphoto(False,iconImg)
     success.geometry("%dx%d+0+0" % (app_width, app_height))
-    success.config(bg='#2d283e')
+    success.config(bg=Background)
+    success.title('Cyber Pharmacy')
+    
+    # logo
+    
+    icon = PhotoImage(file="assets/icon.png").subsample(6, 6)
+
+    icon_label = Label(success,bg=Background, image=icon)
+    icon_label.place(x=35,y=2)
 
     # --Head section--
-    Label(success, text="Pharmacy Management System", font=('Helvetica', 45, 'bold'), fg='#d1d7e0', bg="#2d283e").place(x=120, y=20)
-    Label(success, text="Add New Medicine", font=('Arial', 15, 'bold'), fg='#d1d7e0', bg="#2d283e").place(x=1200, y=80)
+    Label(success, text="Cyber Pharmacy", font=(fontname, 50, 'bold'), fg=foreground, bg=Background).place(x=130, y=2)
+    Label(success, text="Add New Medicine", font=(fontname, 17, 'bold'), fg=foreground, bg=Background).place(x=1200, y=80)
 
-    image = PhotoImage(file="assets/plus.png").subsample(6, 6)
+    image = PhotoImage(file="assets/plus.png").subsample(5, 5)
 
-    image_label = Label(success,bg="#2d283e", image=image)
-    image_label.place(x=1250,y=10)
+    image_label = Label(success,bg=Background, image=image)
+    image_label.place(x=1250,y=2)
 
     image_label.bind("<Button-1>", lambda event: new_medicine())
 
@@ -428,79 +444,82 @@ def main_page():
     
     # --Customer_detail Frame--
     
-    lf=LabelFrame(success,text="Customer Data",width=600, height=650, bg="#564f6f",font="10").place(x=20, y=120)
+    lf=LabelFrame(success,highlightbackground=foreground,highlightthickness=5,highlightcolor=foreground,bd=0,width=600,fg=foreground, height=650, bg=Background,font="10").place(x=20, y=120)
 
     # Label
-    Label(lf, text="Customer Id", font=('Helvetica', 12, 'bold'), bg='#092635', fg="#9EC8B9").place(x=40, y=180)
-    Label(lf, text="Name", font=('Helvetica', 12, 'bold'), bg='#092635', fg="#9EC8B9").place(x=40, y=240)
-    Label(lf, text="Age", font=('Helvetica', 12, 'bold'), bg='#092635', fg="#9EC8B9").place(x=40, y=360)
-    Label(lf, text="Phone Number", font=('Helvetica', 12, 'bold'), bg='#092635', fg="#9EC8B9").place(x=40, y=420)
-    Label(lf, text="Gender", font=('Helvetica', 12, 'bold'), bg='#092635', fg="#9EC8B9").place(x=40, y=480)
-    Label(lf, text="Date", font=('Helvetica', 12, 'bold'), bg='#092635', fg="#9EC8B9").place(x=40, y=600)
-    Label(lf, text="City", font=('Helvetica', 12, 'bold'), bg='#092635', fg="#9EC8B9").place(x=40, y=640)
+    Label(lf, text="Customer Data", font=(fontname, 22, 'bold'),highlightbackground=foreground,highlightthickness=5,highlightcolor=foreground, bg=Background, fg=foreground).place(x=60, y=100)
+    Label(lf, text="Customer Id", font=(fontname, 19, 'bold'), bg=Background, fg=foreground).place(x=80, y=190)
+    Label(lf, text="Name", font=(fontname, 19, 'bold'), bg=Background, fg=foreground).place(x=80, y=265)
+    Label(lf, text="Age", font=(fontname, 19, 'bold'), bg=Background, fg=foreground).place(x=80, y=350)
+    Label(lf, text="Date", font=(fontname, 19, 'bold'), bg=Background, fg=foreground).place(x=80, y=430)
+    Label(lf, text="Gender", font=(fontname, 19, 'bold'), bg=Background, fg=foreground).place(x=80, y=510)
+    Label(lf, text="Phone Number", font=(fontname, 19, 'bold'), bg=Background, fg=foreground).place(x=80, y=590)
+    Label(lf, text="City", font=(fontname, 19, 'bold'), bg=Background, fg=foreground).place(x=80, y=670)
     
     c1=StringVar()
     p1=StringVar()
     d1=StringVar()
 
-    CustEntry=Entry(lf,width=20,bd=2,font=10)
-    nameEntry = Entry(lf, width=20, bd=2, font=10,textvariable=c1)
-    ageEntry = Entry(lf, width=20, bd=2, font=10)
-    DateEntry = tkcalendar.DateEntry(lf, width=10, bd=2, font=8, date_pattern='yyyy-mm-dd',textvariable=d1)
-    NumberEntry=Entry(lf,width=20,bd=2,font=10,textvariable=p1)
-    cityEntry = Entry(lf, width=10, bd=2, font=10)
+    CustEntry=Entry(lf,width=20,bd=2,font=10,highlightthickness=2,highlightcolor=Background)
+    nameEntry = Entry(lf, width=20, bd=2, font=10,textvariable=c1,highlightthickness=2,highlightcolor=Background)
+    ageEntry = Entry(lf, width=20, bd=2, font=10,highlightthickness=2,highlightcolor=Background)
+    DateEntry = tkcalendar.DateEntry(lf, width=19, bd=2, font=10, date_pattern='yyyy-mm-dd',textvariable=d1,highlightthickness=2,highlightcolor=Background)
+    NumberEntry=Entry(lf,width=20,bd=2,font=10,textvariable=p1,highlightthickness=2,highlightcolor=Background)
+    cityEntry = Entry(lf, width=20, bd=2, font=10,highlightthickness=2,highlightcolor=Background)
 
     # Gender
-    gender_combo = Combobox(lf, values=['Male', "Female", "Others"], font="Helvetica 12", state='r', width=14)
-    gender_combo.place(x=120, y=480)
+    gender_combo = Combobox(lf, values=['Male', "Female", "Others"], font="Helvetica 15", state='r', width=19)
+    gender_combo.place(x=280, y=510)
     gender_combo.set('Select a Gender')
     
-    CustEntry.place(x=150,y=180)
-    nameEntry.place(x=120, y=240)
-    ageEntry.place(x=120, y=360)
-    DateEntry.place(x=120, y=600)
-    NumberEntry.place(x=180,y=420)
-    cityEntry.place(x=120, y=640)
+    CustEntry.place(x=280,y=190)
+    nameEntry.place(x=280, y=265)
+    ageEntry.place(x=280, y=350)
+    DateEntry.place(x=280, y=430)
+    NumberEntry.place(x=280,y=590)
+    cityEntry.place(x=280, y=670)
     
     # --End Customer_detail Frame--
 
     # --Medicine Frame--
 
-    rf=LabelFrame(success,text="Medicine Details",width=850, height=275, bg="#564f6f",font="10").place(x=640, y=120)
+    rf=LabelFrame(success,width=850,highlightbackground=foreground,highlightthickness=5,highlightcolor=foreground,bd=0, fg=foreground,height=210, bg=Background,font="10").place(x=640, y=120)
 
     # Label
-    Label(rf, text="Tablet Code", font=('Helvetica', 12, 'bold'), bg='#092635', fg="#9EC8B9").place(x=690, y=150)
-    Label(rf, text="Tablet Name", font=('Helvetica', 12, 'bold'), bg='#092635', fg="#9EC8B9").place(x=1055, y=150)
-    Label(rf, text="Quantity", font=('Helvetica', 12, 'bold'), bg='#092635', fg="#9EC8B9").place(x=690, y=280)
-    Label(rf, text="Price", font=('Helvetica', 12, 'bold'), bg='#092635', fg="#9EC8B9").place(x=1055, y=280)
+    Label(rf, text="Medicine Details", font=(fontname, 20, 'bold'), bg=Background,highlightbackground=foreground,highlightthickness=5,highlightcolor=foreground, fg=foreground).place(x=680, y=100)
+    Label(rf, text="Tablet Code", font=(fontname, 18, 'bold'), bg=Background, fg=foreground).place(x=665, y=160)
+    Label(rf, text="Tablet Name", font=(fontname, 18, 'bold'), bg=Background, fg=foreground).place(x=1060, y=160)
+    Label(rf, text="Quantity", font=(fontname, 18, 'bold'), bg=Background, fg=foreground).place(x=665, y=260)
+    Label(rf, text="Price", font=(fontname, 18, 'bold'), bg=Background, fg=foreground).place(x=1060, y=260)
 
-    Button(rf,text="Add",font=('Helvetica',15,'bold'),bg='#2d283e',fg="#d1d7e0",width=8,height=2,command=AddTablet).place(x=720,y=320)
-    Button(rf,text="Update",font=('Helvetica',15,'bold'),bg='#2d283e',fg="#d1d7e0",width=8,height=2,command=UpdateTablet).place(x=850,y=320)
-    Button(rf,text="Remove",font=('Helvetica',15,'bold'),bg='#2d283e',fg="#d1d7e0",width=8,height=2,command=RemoveTablet).place(x=990,y=320)
-    Button(rf,text="Clear",font=('Helvetica',15,'bold'),bg='#2d283e',fg="#d1d7e0",width=8,height=2,command=ClearTablet).place(x=1120,y=320)
+    Button(rf,text="Add",font=(fontname,18,'bold'),bg=buttBack,fg=Background,width=8,height=1,command=AddTablet).place(x=810,y=340)
+    Button(rf,text="Update",font=(fontname,18,'bold'),bg=buttBack,fg=Background,width=8,height=1,command=UpdateTablet).place(x=940,y=340)
+    Button(rf,text="Remove",font=(fontname,18,'bold'),bg=buttBack,fg=Background,width=8,height=1,command=RemoveTablet).place(x=1080,y=340)
+    Button(rf,text="Clear",font=(fontname,18,'bold'),bg=buttBack,fg=Background,width=8,height=1,command=ClearTablet).place(x=1210,y=340)
     
     updateList()
     
-    CodeEntry = Entry(rf, width=20, bd=2, font=10)
-    TabletEntry = Entry(rf, width=20, bd=2, font=10)
-    QuanEntry = Entry(rf, width=20, bd=2, font=10)
-    PriceEntry = Entry(rf,width=20, bd=2, font=10)
+    CodeEntry = Entry(rf, width=18, bd=2, font=10,highlightthickness=2,highlightcolor=Background)
+    TabletEntry = Entry(rf, width=18, bd=2, font=10,highlightthickness=2,highlightcolor=Background)
+    QuanEntry = Entry(rf, width=18, bd=2, font=10,highlightthickness=2,highlightcolor=Background)
+    PriceEntry = Entry(rf,width=18, bd=2, font=10,highlightthickness=2,highlightcolor=Background)
 
-    CodeEntry.place(x=820, y=150)
-    TabletEntry.place(x=1180, y=150)
-    QuanEntry.place(x=820, y=280)
-    PriceEntry.place(x=1180, y=280)
+    CodeEntry.place(x=830, y=160)
+    TabletEntry.place(x=1225, y=160)
+    QuanEntry.place(x=830, y=260)
+    PriceEntry.place(x=1225, y=260)
     
     TabletEntry.bind("<FocusIn>", listbox)
     TabletEntry.bind('<KeyRelease>',getData)
     # --En₫ Medicine Frame--
     
     # --Treeview Frame--
-    tf = LabelFrame(success,text="Tablet Details", width=650, height=340, bg="#564f6f")
+    tf = LabelFrame(success,fg=foreground, width=650, height=340,font='10', highlightbackground=foreground,highlightthickness=5,highlightcolor=foreground,bd=0,bg=Background)
     tf.place(x=640, y=410)
+    
 
     cols = ('Code', 'Tablet Name','Quantity','Price','Total')
-    tree = Treeview(tf, columns=cols, show='headings', height=10)
+    tree = Treeview(tf, columns=cols, show='headings', height=11)
     for col in cols:
          tree.heading(col, text=col)
 
@@ -521,7 +540,7 @@ def main_page():
     # --End Treeview Frame--
 
     # --Invoice Button--
-    Button(success,text="Print Invoice",font=('Helvetica',15,'bold'),bg='#2d283e',fg="#d1d7e0",width=16,height=2,command=Invoice).place(x=960,y=700)
+    Button(success,text="Print Invoice",font=(fontname,18,'bold'),bg=buttBack,fg=Background,width=16,height=1,command=Invoice).place(x=960,y=710)
     success.mainloop()
 
 
@@ -539,37 +558,44 @@ def clear():
     userValue.set("")
     passValue.set("")
 
+
+
 app = Tk()
+foreground="#46688B"
+Background="#F4F7FB"
+buttBack="#38706B"
+fontname="Consolas"
 app_width = app.winfo_screenwidth()
 app_height = app.winfo_screenheight()
 app.geometry("%dx%d+0+0" % (app_width, app_height))
-app.config(bg='#2d283e')
-app.title('Pharmacy Management system')
+app.config(bg=Background)
+iconImg=PhotoImage(file="D:\\MCA_MIni_Final_project\\Final Year project\\Pharmacy Mangement System code\\assets\\icon.png")
+app.iconphoto(False,iconImg)
+app.title('Cyber Pharmacy')
 
 tree_list=[]
 billNum=random.randint(1,300)
+
 # ----Login form----
 
-loginFrame=Frame(app,width=1200,height=600,bg="#564f6f").place(x=200,y=100)
+loginFrame=Frame(app,width=500,height=360,bg=foreground).place(x=500,y=180)
 
-Label(loginFrame,text="Pharmacy Management System",font=('Helvetica', 45,'bold'),fg='#d1d7e0',bg= "#564f6f").place(x=380,y=120)
+Label(app,text="Cyber Pharmacy",font=(fontname, 50,'bold'),fg=foreground,bg= Background).place(x=480,y=60)
 
 
-Label(loginFrame,text="Log In",font=('Helvetica', 32,'bold'),fg='#d1d7e0',bg="#564f6f").place(x=730,y=245)
-Label(loginFrame,text="UserName",font=('Helvetica', 22,'bold'),fg='#d1d7e0',bg="#564f6f").place(x=530,y=340)
-Label(loginFrame,text="Password",font=('Helvetica', 22,'bold'),fg='#d1d7e0',bg="#564f6f").place(x=530,y=445)
+Label(loginFrame,text="Log In",font=(fontname, 40,'bold'),fg=Background,bg=foreground).place(x=670,y=220)
+Label(loginFrame,text="UserName",font=(fontname, 26,'bold'),fg=Background,bg=foreground).place(x=530,y=320)
+Label(loginFrame,text="Password",font=(fontname, 26,'bold'),fg=Background,bg=foreground).place(x=530,y=425)
 
 # Entry
 userValue=StringVar()
 passValue=StringVar()
 
-userEntry=Entry(loginFrame,textvariable=userValue,width=20,bd=1,font=10,highlightthickness=3,highlightcolor='blue').place(x=730,y=345)
-passEntry=Entry(loginFrame,textvariable=passValue,width=20,bd=1,font=10,highlightthickness=3,highlightcolor='blue').place(x=730, y=450)
+userEntry=Entry(loginFrame,textvariable=userValue,width=20,bd=1,font=12,highlightthickness=3,highlightcolor=Background).place(x=730,y=325)
+passEntry=Entry(loginFrame,textvariable=passValue,width=20,bd=1,font=12,highlightthickness=3,show='*',highlightcolor=Background).place(x=730, y=430)
 
-Button(loginFrame,text="Login",font=('Helvetica', 15,'bold'),bg='#2d283e',fg="#d1d7e0",width=12,height=2,command=login).place(x=560,y=550)
-Button(loginFrame,text="Clear",font=('Helvetica',15,'bold'),bg='#2d283e',fg="#d1d7e0",width=12,height=2,command=clear).place(x=760,y=550)
-Button(loginFrame,text='main_page',command=main_page).place(x=960,y=550)
-Button(loginFrame,text='Invoice',command=Invoice).place(x=1060,y=550)
+Button(app,text="Login",font=(fontname, 18,'bold'),bg=buttBack,fg=Background,width=10,height=1,command=login).place(x=600,y=570)
+Button(app,text="Clear",font=(fontname,18,'bold'),bg=buttBack,fg=Background,width=10,height=1,command=clear).place(x=770,y=570)
 # ---- End Login Form ----
 
 app.mainloop()
